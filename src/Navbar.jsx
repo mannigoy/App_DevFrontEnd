@@ -36,7 +36,7 @@ const styles = {
 export default function Navbar({
   links = [
     { label: "Shop", href: "#" },
-    { label: "About Us", href: "#" },
+    { label: "About Us", href: "/about" },
     { label: "Contact Us", href: "/contact" },
   ],
   brandName = "Campus Marketplace",

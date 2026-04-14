@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import Marketplace from "./MarketPlace";
 import Contactpage from "./Contactpage";
+import AboutPage from "./AboutPage";
+import SignInModal from "./Signinmodal";
+import SignUpModal from "./Signupmodal";
 
 const styles = {
   page: {
@@ -18,18 +22,46 @@ const styles = {
 };
 
 export default function App() {
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
+
+  const openSignUp = () => {
+    setShowSignIn(false); // Close Sign In
+    setShowSignUp(true);  // Open Sign Up
+  };
+
+  const openSignIn = () => {
+    setShowSignUp(false); // Close Sign Up
+    setShowSignIn(true);  // Open Sign In
+  };
+
   return (
     <div style={styles.page}>
       <Navbar
         onOrdersClick={() => console.log("Orders clicked")}
-        onSignInClick={() => console.log("Sign in clicked")}
+        onSignInClick={() => setShowSignIn(true)}
       />
+      
+      <SignInModal 
+        isOpen={showSignIn} 
+        onClose={() => setShowSignIn(false)} 
+        onSwitch={openSignUp} // Changed this to use the function you defined above
+      />
+
+      <SignUpModal 
+        isOpen={showSignUp} 
+        onClose={() => setShowSignUp(false)} 
+        onSwitchToSignIn={openSignIn} // Added this to pass the switch function to the Sign Up modal
+      />
+      
       <div style={styles.content}>
         <Routes>
-          <Route path="/" element={<Marketplace />} />
+          <Route path="/landing_page" element={<Marketplace />} />
           <Route path="/contact" element={<Contactpage />} />
+          <Route path="/about" element={<AboutPage />} />
         </Routes>
       </div>
+      
       <Footer
         brandName="Campus Marketplace"
         brandDescription="The official online store for Cebu Institute of Technology - University students. Quality uniforms, merchandise, and school supplies."
