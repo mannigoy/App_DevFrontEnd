@@ -35,7 +35,7 @@ const styles = {
 
 export default function Navbar({
   links = [
-    { label: "Shop", href: "#" },
+    { label: "Shop", href: "/landing_page" },
     { label: "About Us", href: "/about" },
     { label: "Contact Us", href: "/contact" },
   ],
