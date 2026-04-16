@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap");
+
+/* ─── GLOBAL VARIABLES ─────────────────────────────────────────────── */
 :root {
   font-family: "Segoe UI", Arial, sans-serif;
   line-height: 1.5;
@@ -8,6 +11,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
   --primary: #800000;
   --primary-dark: #6b0000;
   --accent: #ffd700;
@@ -18,18 +22,18 @@
   --card: #ffffff;
 }
 
+/* ─── BASE STYLES ──────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
+html, body, #root {
   margin: 0;
   min-height: 100%;
 }
 
 body {
+  font-family: inherit;
   background: var(--bg);
   color: var(--text);
 }
@@ -38,9 +42,74 @@ a {
   color: inherit;
 }
 
-button,
-input,
-select,
-textarea {
+button, input, select, textarea {
   font: inherit;
 }
+
+/* ─── LAYOUT STRUCTURE ─────────────────────────────────────────────── */
+.app-page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
+}
+
+/* ─── CAMPUS MARKETPLACE COMPONENTS (Upgraded with variables) ──────── */
+
+.stat-card { 
+  background: var(--card); 
+  border-radius: 12px; 
+  border: 1px solid var(--border); 
+  padding: 20px 22px; 
+}
+
+/* Navigation & Tabs */
+.cm-nav-item { 
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; 
+  border-radius: 8px; margin-bottom: 2px; font-size: 14px; 
+  cursor: pointer; transition: background 0.13s, color 0.13s; 
+  color: var(--muted); font-weight: 400; border: none; 
+  background: transparent; width: 100%; text-align: left; 
+}
+.cm-nav-item:hover { 
+  background: #f5f0f0; 
+  color: var(--primary); 
+}
+.cm-nav-item.active { 
+  background: #fdf0f0; 
+  color: var(--primary); 
+  font-weight: 600; 
+}
+
+.cm-tab { 
+  padding: 6px 14px; border-radius: 7px; font-size: 13px; cursor: pointer; 
+  transition: all 0.12s; 
+}
+.cm-tab:hover { 
+  color: var(--primary); 
+}
+
+/* Tables */
+.cm-row { transition: background 0.1s; }
+.cm-row:hover { background: #fdf8f8 !important; }
+
+/* Buttons */
+.cm-btn-ghost { 
+  display: flex; align-items: center; gap: 7px; padding: 9px 18px; 
+  border-radius: 8px; border: 1px solid var(--border); background: var(--card); 
+  font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; 
+  transition: background 0.12s; 
+}
+.cm-btn-ghost:hover { background: #fdf5f5; }
+
+.cm-btn-primary, .cm-add-btn { 
+  display: flex; align-items: center; gap: 7px; padding: 9px 18px; 
+  border-radius: 8px; border: none; background: var(--primary); 
+  font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; 
+  transition: background 0.15s; 
+}
+.cm-btn-primary:hover, .cm-add-btn:hover { background: var(--primary-dark) !important; }

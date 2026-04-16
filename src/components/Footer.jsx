@@ -10,6 +10,11 @@ const styles = {
     gap: 24, paddingBottom: 16,
   },
   footerGridMobile: { gridTemplateColumns: "1fr", gap: 18 },
+  
+  // ─── NEW BRANDING STYLES (Matched to your Navbar/Sidebar) ───
+  brandTitleBold: { color: "#FFD700", fontWeight: 700, fontSize: 18, lineHeight: 1.2 },
+  brandTitleSub: { color: "#FFD700", fontSize: 12, opacity: 0.85, marginTop: 2, marginBottom: 8 },
+  
   footerTitle: { color: "#FFD700", fontSize: 14, fontWeight: 700, marginBottom: 10 },
   footerMuted: { color: "#FFD700", fontSize: 11, lineHeight: 1.7 },
   footerLink: {
@@ -30,18 +35,10 @@ const styles = {
 
 /**
  * Footer
- *
- * Props:
- *  - brandName: string
- *  - brandDescription: string
- *  - quickLinks: { label: string, href: string }[]
- *  - contactInfo: { icon: string, text: string }[]
- *  - socialLinks: { label: string, name: string, href?: string }[]
- *  - followTagline: string
- *  - copyrightText: string
  */
 export default function Footer({
   brandName = "Campus Marketplace",
+  brandSub = "CIT-U Official Store", // <-- Added the sub-brand prop
   brandDescription = "The official online store for Cebu Institute of Technology - University students. Quality uniforms, merchandise, and school supplies.",
   quickLinks = [
     { label: "Shop", href: "#" },
@@ -88,9 +85,10 @@ export default function Footer({
           ...(isMobile ? styles.footerGridMobile : {}),
         }}
       >
-        {/* Brand */}
+        {/* Brand Section */}
         <div>
-          <p style={styles.footerTitle}>{brandName}</p>
+          <div style={styles.brandTitleBold}>{brandName}</div>
+          <div style={styles.brandTitleSub}>{brandSub}</div>
           <p style={styles.footerMuted}>{brandDescription}</p>
         </div>
 
