@@ -70,20 +70,36 @@ export default function Navbar({
               </button>
             )}
 
-            {/* User Profile / Greeting */}
-            <span className="nav-greeting" style={{ margin: "0 10px", fontWeight: "bold", color: "#800020" }}>
-              Hi, {username}!
-            </span>
+            <div className="nav-account">
+              <button type="button" className="nav-btn nav-account-btn">
+                <span className="nav-account-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+                    <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.34 0-6 1.66-6 4v2h12v-2c0-2.34-2.66-4-6-4Z" />
+                  </svg>
+                </span>
+                <span className="nav-account-name">{username}</span>
+              </button>
 
-            <button type="button" className="nav-btn" onClick={onLogoutClick} style={{ border: "1px solid #800020", borderRadius: "5px" }}>
-              Log Out
-            </button>
+              <div className="nav-account-menu" role="menu" aria-label="Account menu">
+                <Link to="/dashboard" className="nav-account-item" role="menuitem">
+                  My account
+                </Link>
+                <button type="button" className="nav-account-item" onClick={onLogoutClick} role="menuitem">
+                  Log out
+                </button>
+              </div>
+            </div>
           </>
         ) : (
           // WHAT TO SHOW WHEN GUEST (LOGGED OUT)
           <>
-            <button type="button" className="nav-btn" onClick={onSignInClick} style={{ background: "#800020", color: "white", borderRadius: "5px", padding: "8px 16px" }}>
-              Sign In
+            <button type="button" className="nav-btn nav-account-btn nav-signin-btn" onClick={onSignInClick}>
+              <span className="nav-account-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+                  <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.34 0-6 1.66-6 4v2h12v-2c0-2.34-2.66-4-6-4Z" />
+                </svg>
+              </span>
+              <span className="nav-account-name">Sign In</span>
             </button>
           </>
         )}

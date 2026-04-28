@@ -1,29 +1,50 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 import "./styles/Signup.css";
 
 const API = "http://localhost:8080/api/auth";
 
-// Step 1: Enter CIT-U Email
+// Step 1: Enter CIT-U Email + Password
 function StepEmail({ onNext }) {
-  const [email, setEmail] = useState("");
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const passwordChecks = {
+    length: form.password.length >= 10,
+    letter: /[A-Za-z]/.test(form.password),
+    number: /\d/.test(form.password),
+  };
+  const isPasswordValid =
+    passwordChecks.length && passwordChecks.letter && passwordChecks.number;
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setError("");
+  };
+
   const handleSend = async () => {
-    if (!email.endsWith("@cit.edu")) {
+    if (!form.email.endsWith("@cit.edu")) {
       setError("Only @cit.edu emails are allowed.");
       return;
     }
+
+    if (!isPasswordValid) {
+      setError("Password must meet all requirements below.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch(`${API}/send-otp`, {
+      const res = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-      onNext(email);
+      onNext(form.email);
     } catch {
       setError("Cannot reach server. Is Spring Boot running?");
     } finally {
@@ -34,7 +55,7 @@ function StepEmail({ onNext }) {
   return (
     <>
       <div className="modal-title">Create an account</div>
-      <div className="modal-subtitle">Enter your CIT-U email to get started</div>
+      <div className="modal-subtitle">Enter your email and password to get started</div>
 
       <div className="info-box">
         Use your <strong>@cit.edu email</strong>. A 6-digit code will be sent to your inbox.
@@ -47,10 +68,43 @@ function StepEmail({ onNext }) {
         <input
           className="form-input"
           type="email"
+          name="email"
           placeholder="yourname@cit.edu"
-          value={email}
-          onChange={e => { setEmail(e.target.value); setError(""); }}
+          value={form.email}
+          onChange={handleChange}
         />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Password</label>
+        <input
+          className="form-input"
+          type="password"
+          name="password"
+          placeholder="Create a strong password"
+          value={form.password}
+          onChange={handleChange}
+        />
+        <div className="password-rules">
+          <div className={`password-rule ${passwordChecks.length ? "met" : ""}`}>
+            <span className="password-rule-icon" aria-hidden="true">
+              {passwordChecks.length ? "✓" : "x"}
+            </span>
+            <span>At least 10 characters</span>
+          </div>
+          <div className={`password-rule ${passwordChecks.letter ? "met" : ""}`}>
+            <span className="password-rule-icon" aria-hidden="true">
+              {passwordChecks.letter ? "✓" : "x"}
+            </span>
+            <span>At least 1 letter</span>
+          </div>
+          <div className={`password-rule ${passwordChecks.number ? "met" : ""}`}>
+            <span className="password-rule-icon" aria-hidden="true">
+              {passwordChecks.number ? "✓" : "x"}
+            </span>
+            <span>At least 1 number</span>
+          </div>
+        </div>
       </div>
 
       <button className="btn-submit" onClick={handleSend} disabled={loading}>
@@ -78,10 +132,7 @@ function StepOtp({ email, onNext, onBack }) {
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("email", data.email);
-
-      onNext(data.hasUsername);
+      onNext(data);
     } catch {
       setError("Something went wrong.");
     } finally {
@@ -118,7 +169,7 @@ function StepOtp({ email, onNext, onBack }) {
 }
 
 // Step 2: Choose Username
-function StepUsername({ onNext, onBack }) {
+function StepUsername({ token, onNext, onBack }) {
   const [form, setForm] = useState({ username: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -135,15 +186,15 @@ function StepUsername({ onNext, onBack }) {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const tokenToUse = token;
       const res = await fetch(`${API}/username`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, username: form.username }),
+        body: JSON.stringify({ token: tokenToUse, username: form.username }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-      onNext();
+      onNext(form.username);
     } catch {
       setError("Something went wrong.");
     } finally {
@@ -228,10 +279,35 @@ function StepTerms({ onFinish, onBack }) {
 }
 
 // Main Modal
-export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }) {
+export default function SignUpModal({
+  isOpen,
+  mode = "signup",
+  onClose,
+  onSwitchToSignIn,
+  onSwitchToSignUp,
+}) {
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
+  const [token, setToken] = useState("");
+  const [username, setUsername] = useState("");
+  const [signInForm, setSignInForm] = useState({ email: "", password: "" });
+  const [signInError, setSignInError] = useState("");
+  const [signInLoading, setSignInLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setStep(0);
+    setEmail("");
+    setDone(false);
+    setToken("");
+    setUsername("");
+    setSignInForm({ email: "", password: "" });
+    setSignInError("");
+    setSignInLoading(false);
+  }, [isOpen, mode]);
 
   if (!isOpen) return null;
 
@@ -243,7 +319,71 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }) {
     setStep(0);
     setEmail("");
     setDone(false);
+    setToken("");
+    setUsername("");
+    setSignInForm({ email: "", password: "" });
+    setSignInError("");
+    setSignInLoading(false);
     onClose();
+  };
+
+  const handleSignInChange = (e) => {
+    setSignInForm({ ...signInForm, [e.target.name]: e.target.value });
+    setSignInError("");
+  };
+
+  const handleSignIn = async () => {
+    if (!signInForm.email || !signInForm.password) {
+      setSignInError("Please enter both email and password.");
+      return;
+    }
+
+    setSignInLoading(true);
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: signInForm.email,
+          password: signInForm.password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const raw = data.error || "";
+        const isInvalidCreds = raw.toLowerCase().includes("invalid email or password");
+        const errMsg = isInvalidCreds
+          ? "Invalid email or password. Tip: check your password meets the requirements below or reset it."
+          : raw || "Login failed.";
+        setSignInError(errMsg);
+        return;
+      }
+
+      const userRes = await fetch(`${API}/current-user`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: data.token }),
+      });
+      const userData = await userRes.json();
+      if (!userRes.ok) {
+        setSignInError(userData.error || "Failed to load user info.");
+        return;
+      }
+
+      login(userData.email, userData.username, data.token);
+      handleClose();
+      navigate("/dashboard");
+    } catch (err) {
+      setSignInError("Cannot reach server. Is Spring Boot running?");
+    } finally {
+      setSignInLoading(false);
+    }
+  };
+
+  const signInPasswordChecks = {
+    length: signInForm.password.length >= 10,
+    letter: /[A-Za-z]/.test(signInForm.password),
+    number: /\d/.test(signInForm.password),
   };
 
   const stepLabels = ["Email", "Verify", "Username", "Terms"];
@@ -279,35 +419,119 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }) {
           <div className="modal-logo-sub">CIT-U's official school merchandise store</div>
         </div>
 
-        {!done && <StepBar />}
+        {mode === "signin" ? (
+          <>
+            <div className="modal-title">Sign In</div>
+            <div className="modal-subtitle">Enter your email and password to continue</div>
 
-        {done ? (
-          <div className="text-center py-3">
-            <div className="modal-emoji">🎉</div>
-            <div className="modal-title">Account Created!</div>
-            <div className="modal-subtitle mb-4">
-              Welcome to Campus Marketplace. You're all set!
+            {signInError && <div className="msg-error">⚠ {signInError}</div>}
+
+            <div className="form-group">
+              <label className="form-label">CIT-U Email</label>
+              <input
+                className="form-input"
+                type="email"
+                name="email"
+                placeholder="yourname@cit.edu"
+                value={signInForm.email}
+                onChange={handleSignInChange}
+              />
             </div>
-            <div className="msg-success">✓ Your account has been successfully created.</div>
-            <button className="btn-submit" onClick={handleClose}>
-              Get Started
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input
+                className="form-input"
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={signInForm.password}
+                onChange={handleSignInChange}
+              />
+              <div className="password-rules">
+                <div className={`password-rule ${signInPasswordChecks.length ? "met" : ""}`}>
+                  <span className="password-rule-icon" aria-hidden="true">
+                    {signInPasswordChecks.length ? "✓" : "x"}
+                  </span>
+                  <span>At least 10 characters</span>
+                </div>
+                <div className={`password-rule ${signInPasswordChecks.letter ? "met" : ""}`}>
+                  <span className="password-rule-icon" aria-hidden="true">
+                    {signInPasswordChecks.letter ? "✓" : "x"}
+                  </span>
+                  <span>At least 1 letter</span>
+                </div>
+                <div className={`password-rule ${signInPasswordChecks.number ? "met" : ""}`}>
+                  <span className="password-rule-icon" aria-hidden="true">
+                    {signInPasswordChecks.number ? "✓" : "x"}
+                  </span>
+                  <span>At least 1 number</span>
+                </div>
+              </div>
+            </div>
+
+            <button className="btn-submit" onClick={handleSignIn} disabled={signInLoading}>
+              {signInLoading ? "Signing in..." : "Sign In"}
             </button>
-          </div>
-        ) : step === 0 ? (
-          <StepEmail onNext={(e) => { setEmail(e); setStep(1); }} />
-        ) : step === 1 ? (
-          <StepOtp
-            email={email}
-            onNext={(hasUsername) => {
-              if (hasUsername) setDone(true); 
-              else setStep(2);              
-            }}
-            onBack={() => setStep(0)}
-          />
-        ) : step === 2 ? (
-          <StepUsername onNext={() => setStep(3)} onBack={() => setStep(1)} />
+
+            <button className="btn-outline" onClick={onSwitchToSignUp}>
+              Create account
+            </button>
+          </>
         ) : (
-          <StepTerms onFinish={() => setDone(true)} onBack={() => setStep(2)} />
+          <>
+            {!done && <StepBar />}
+
+            {done ? (
+              <div className="text-center py-3">
+                <div className="modal-emoji">🎉</div>
+                <div className="modal-title">Account Created!</div>
+                <div className="modal-subtitle mb-4">
+                  Welcome to Campus Marketplace. You're all set!
+                </div>
+                <div className="msg-success">✓ Your account has been successfully created.</div>
+                <button className="btn-submit" onClick={() => {
+                  // Login the user
+                  login(email, username, token);
+                  handleClose();
+                  navigate("/dashboard");
+                }}>
+                  Get Started
+                </button>
+              </div>
+            ) : step === 0 ? (
+              <>
+                <StepEmail onNext={(e) => { setEmail(e); setStep(1); }} />
+                <button className="btn-outline" onClick={onSwitchToSignIn}>
+                  Already have an account? Sign in
+                </button>
+              </>
+            ) : step === 1 ? (
+              <StepOtp
+                email={email}
+                onNext={(data) => {
+                  setToken(data.token);
+                  if (data.hasUsername) setDone(true); 
+                  else setStep(2);              
+                }}
+                onBack={() => setStep(0)}
+              />
+            ) : step === 2 ? (
+              <StepUsername 
+                token={token}
+                onNext={(savedUsername) => {
+                  setUsername(savedUsername);
+                  setStep(3);
+                }} 
+                onBack={() => setStep(1)} 
+              />
+            ) : (
+              <StepTerms 
+                onFinish={() => setDone(true)} 
+                onBack={() => setStep(2)} 
+              />
+            )}
+          </>
         )}
       </div>
     </div>

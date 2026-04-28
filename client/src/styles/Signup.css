@@ -82,6 +82,36 @@
   box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
 }
 
+.form-hint {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.password-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #777;
+}
+
+.password-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.password-rule.met {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.password-rule-icon {
+  width: 14px;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
 /* Buttons */
 .btn-submit {
   width: 100%;

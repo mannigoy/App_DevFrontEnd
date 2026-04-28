@@ -99,6 +99,77 @@
   color: #ffd700;
 }
 
+.nav-account {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-account-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.nav-signin-btn {
+  background: #9a0000;
+  border-radius: 6px;
+}
+
+.nav-account-icon {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ffd700;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+}
+
+.nav-account-name {
+  font-weight: 600;
+  color: #ffd700;
+}
+
+.nav-account-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  display: none;
+  z-index: 20;
+}
+
+.nav-account:hover .nav-account-menu,
+.nav-account:focus-within .nav-account-menu {
+  display: block;
+}
+
+.nav-account-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: #800000;
+  font-size: 13px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nav-account-item:hover {
+  background: #f3f4f6;
+}
+
 /* =========================================
    Footer Styles
    ========================================= */

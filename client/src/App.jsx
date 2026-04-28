@@ -1,6 +1,6 @@
-import { Routes, Route, useNavigate,useLocation} from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Marketplace from "./pages/MarketPlace";
@@ -9,38 +9,81 @@ import AboutUs from "./pages/AboutUs";
 import SellerSide from "./pages/SellerSide/SellerSide";
 import ShopPage from "./pages/ShopPage";
 import SignUpModal from "./Signupmodal";
+import Dashboard from "./pages/Dashboard";
+import { useAuth } from "./AuthContext";
 
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   // 1. Modal State Logic
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("signup");
+  const [status, setStatus] = useState("checking...");
+
+  // Check backend status on mount and periodically
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/users", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          setStatus("✓ Online");
+        } else {
+          setStatus("⚠ Error");
+        }
+      } catch (error) {
+        setStatus("✗ Offline");
+      }
+    };
+
+    checkBackend();
+    const interval = setInterval(checkBackend, 5000); // Check every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // 2. Route Check Logic
   // Hide main layout elements when on the Seller Dashboard
   const isSellerDashboard = location.pathname.startsWith("/user/seller");
 
   // 3. Handlers
-  const openSignUp = () => setIsSignUpOpen(true);
+  const openSignUp = () => {
+    setAuthMode("signup");
+    setIsSignUpOpen(true);
+  };
+  const openSignIn = () => {
+    setAuthMode("signin");
+    setIsSignUpOpen(true);
+  };
   const closeSignUp = () => setIsSignUpOpen(false);
 
-  const handleSwitchToSignIn = () => {
-    console.log("Redirecting to Sign In flow...");
-    // If you build a separate LoginModal, you'd toggle it here.
+  const handleLogout = () => {
+    logout();
+    navigate("/");
   };
 
   return (
     <div className="app-container">
+        {/* BACKEND STATUS INDICATOR */}
+        <div style={{ textAlign: "center", padding: "8px", background: "#f3f4f6", fontSize: "14px" }}>
+          Backend status: <strong>{status}</strong>
+        </div>
+
         {/* NAVBAR:
             We only show this if we aren't in the Seller Dashboard.
-            The Sign In button opens the sign up modal.
+            The Sign In button opens the login modal.
         */}
       {!isSellerDashboard && (
         <Navbar
           onOrdersClick={() => navigate("/orders")}
-            onSignInClick={openSignUp}
+          onSignInClick={openSignIn}
+          isLoggedIn={!!user}
+          username={user?.username || ""}
+          onLogoutClick={handleLogout}
         />
       )}
 
@@ -49,6 +92,9 @@ export default function App() {
         <Routes>
           {/* Main Shop/Home Page */}
           <Route path="/" element={<ShopPage />} />
+          
+          {/* Dashboard Page (shown after login) */}
+          <Route path="/dashboard" element={<Dashboard />} />
           
           {/* Marketplace/Landing Page */}
           <Route path="/landing_page" element={<Marketplace />} />
@@ -65,14 +111,16 @@ export default function App() {
         </Routes>
       </main>
 
-      {/* GLOBAL SIGN UP MODAL:
+      {/* SIGN UP MODAL:
           Placed outside the Routes so it can overlay any page 
           without unmounting the background content.
       */}
       <SignUpModal 
         isOpen={isSignUpOpen} 
+        mode={authMode}
         onClose={closeSignUp} 
-        onSwitchToSignIn={handleSwitchToSignIn}
+        onSwitchToSignIn={openSignIn}
+        onSwitchToSignUp={openSignUp}
       />
 
       {/* FOOTER */}
